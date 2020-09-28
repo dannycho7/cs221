@@ -141,14 +141,11 @@ def kmeans(examples: List[Dict[str, float]], K: int, maxEpochs: int) -> Tuple[Li
             final reconstruction loss)
     '''
     # BEGIN_YOUR_CODE (our solution is 25 lines of code, but don't worry if you deviate from this)
-    def getCentroidLengthSq(centroid):
-        return sum(v ** 2 for k, v in centroid.items())
     centroids: List[Dict[str, float]] = [random.choice(examples) for k in range(K)]
-    centroids_length_sq: List[float] = [getCentroidLengthSq(centroid) for centroid in centroids]
+    centroids_sq: List[float] = [dotProduct(centroid, centroid) for centroid in centroids]
+    examples_sq: List[float] = [dotProduct(example, example) for example in examples]
     def getDistFromCentroid(centroid_i, example_i):
-        centroid, example = [centroids[centroid_i], examples[example_i]]
-        partial_dist = sum((example[k] - centroid.get(k, 0))**2 - centroid.get(k, 0)**2 for k in example.keys())
-        return centroids_length_sq[centroid_i] + partial_dist
+        return examples_sq[example_i] + centroids_sq[centroid_i] - 2 * dotProduct(centroids[centroid_i], examples[example_i])
     assignments: List[int] = [0 for _ in range(len(examples))]
     for _ in range(maxEpochs):
         old_assignments = assignments.copy()
@@ -164,7 +161,7 @@ def kmeans(examples: List[Dict[str, float]], K: int, maxEpochs: int) -> Tuple[Li
                 for example_i in cluster:
                     increment(cluster_sum, 1, examples[example_i])
                 increment(centroids[k], (1 / len(cluster)), cluster_sum)
-            centroids_length_sq[k] = getCentroidLengthSq(centroids[k])
+            centroids_sq[k] = dotProduct(centroids[k], centroids[k])
     loss = sum(getDistFromCentroid(assignments[i], i) for i in range(len(examples)))
     return (centroids, assignments, loss)
     # END_YOUR_CODE
