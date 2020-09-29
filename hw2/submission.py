@@ -80,8 +80,10 @@ def generateDataset(numExamples: int, weights: WeightVector) -> List[Example]:
     # Note that the weight vector can be arbitrary during testing. 
     def generateExample() -> Example:
         # BEGIN_YOUR_CODE (our solution is 2 lines of code, but don't worry if you deviate from this)
-        phi = { random.choice(list(weights.keys())): random.uniform(1, 10) for _ in range(random.randint(0, len(weights))) }
-        y = 1 if dotProduct(weights , weights) >= 0 else -1
+        phi = {}
+        while dotProduct(weights, phi) == 0:
+            phi = { random.choice(list(weights.keys())): random.randint(-10, 10) for _ in range(random.randint(1, len(weights))) }
+        y = 1 if dotProduct(weights , phi) >= 0 else -1
         # END_YOUR_CODE
         return (phi, y)
     return [generateExample() for _ in range(numExamples)]
