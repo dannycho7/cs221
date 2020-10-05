@@ -71,7 +71,10 @@ class VowelInsertionProblem(util.SearchProblem):
         results = []
         prevWord, i = state
         unfilledWord = self.queryWords[i]
-        for word in self.possibleFills(unfilledWord).union([unfilledWord]):
+        fills = self.possibleFills(unfilledWord)
+        if len(fills) == 0:
+            fills = set([unfilledWord])
+        for word in fills:
             results.append((word, (word, i + 1), self.bigramCost(prevWord, word)))
         return results
         # END_YOUR_CODE
