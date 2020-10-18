@@ -174,12 +174,12 @@ class MinimaxAgent(MultiAgentSearchAgent):
         return evalFn(s)
       elif agentIndex == 0:
         return max(getVal(s.generateSuccessor(agentIndex, a), d, nextAgentIndex) for a in actions)
-      elif agentIndex == s.getNumAgents() - 1:
-        return min(getVal(s.generateSuccessor(agentIndex, a), d - 1, nextAgentIndex) for a in actions)
       else:
-        return min(getVal(s.generateSuccessor(agentIndex, a), d, nextAgentIndex) for a in actions)
+        nextD = d - (1 if agentIndex == s.getNumAgents() - 1 else 0)
+        return min(getVal(s.generateSuccessor(agentIndex, a), nextD, nextAgentIndex) for a in actions)
 
     targetVal = getVal(gameState, self.depth, 0)
+    # print(f"MinimaxAgent value of state = {targetVal}")
     legalActions = gameState.getLegalActions(0)
     actions = [a for a in legalActions if getVal(gameState.generateSuccessor(0, a), self.depth, 1) == targetVal]
 
@@ -202,7 +202,41 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
     """
 
     # BEGIN_YOUR_CODE (our solution is 36 lines of code, but don't worry if you deviate from this)
-    raise Exception("Not implemented yet")
+    def getVal(s, d, agentIndex, alpha = float('-inf'), beta = float('inf'), evalFn = self.evaluationFunction):
+      nextAgentIndex = 0 if agentIndex == s.getNumAgents() - 1 else agentIndex + 1
+      actions = s.getLegalActions(agentIndex)
+      if len(actions) == 0:
+        return s.getScore()
+      elif d == 0:
+        if agentIndex != 0:
+          raise Exception(f"Unexpected agentIndex {agentIndex} != {0}")
+        return evalFn(s)
+      elif agentIndex == 0:
+        maxVal = float('-inf')
+        # actions.sort(key=lambda a: evalFn(s.generateSuccessor(agentIndex, a)), reverse=True)
+        for a in actions:
+          maxVal = max(maxVal, getVal(s.generateSuccessor(agentIndex, a), d, nextAgentIndex, alpha, beta))
+          alpha = max(alpha, maxVal)
+          if alpha >= beta:
+            break
+        return maxVal
+      else:
+        nextD = d - (1 if agentIndex == s.getNumAgents() - 1 else 0)
+        minVal = float('inf')
+        # actions.sort(key=lambda a: evalFn(s.generateSuccessor(agentIndex, a)), reverse=False)
+        for a in actions:
+          minVal = min(minVal, getVal(s.generateSuccessor(agentIndex, a), nextD, nextAgentIndex, alpha, beta))
+          beta = min(beta, minVal)
+          if alpha >= beta:
+            break
+        return minVal
+
+    targetVal = getVal(gameState, self.depth, 0)
+    # print(f"AlphaBetaAgent value of state = {targetVal}")
+    legalActions = gameState.getLegalActions(0)
+    actions = [a for a in legalActions if getVal(gameState.generateSuccessor(0, a), self.depth, 1) == targetVal]
+
+    return random.choice(actions)
     # END_YOUR_CODE
 
 ######################################################################################
