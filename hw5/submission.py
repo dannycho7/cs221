@@ -256,7 +256,27 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
     """
 
     # BEGIN_YOUR_CODE (our solution is 20 lines of code, but don't worry if you deviate from this)
-    raise Exception("Not implemented yet")
+    def getVal(s, d, agentIndex, evalFn = self.evaluationFunction):
+      nextAgentIndex = 0 if agentIndex == s.getNumAgents() - 1 else agentIndex + 1
+      actions = s.getLegalActions(agentIndex)
+      if len(actions) == 0:
+        return s.getScore()
+      elif d == 0:
+        if agentIndex != 0:
+          raise Exception(f"Unexpected agentIndex {agentIndex} != {0}")
+        return evalFn(s)
+      elif agentIndex == 0:
+        return max(getVal(s.generateSuccessor(agentIndex, a), d, nextAgentIndex) for a in actions)
+      else:
+        nextD = d - (1 if agentIndex == s.getNumAgents() - 1 else 0)
+        return sum((1 / len(actions)) * getVal(s.generateSuccessor(agentIndex, a), nextD, nextAgentIndex) for a in actions)
+
+    targetVal = getVal(gameState, self.depth, 0)
+    # print(f"MinimaxAgent value of state = {targetVal}")
+    legalActions = gameState.getLegalActions(0)
+    actions = [a for a in legalActions if getVal(gameState.generateSuccessor(0, a), self.depth, 1) == targetVal]
+
+    return random.choice(actions)
     # END_YOUR_CODE
 
 ######################################################################################
