@@ -1,7 +1,8 @@
 from util import manhattanDistance
 from game import Directions
-import random, util
+import math, random, util
 from typing import Any, DefaultDict, List, Set, Tuple
+from collections import defaultdict
 
 from game import Agent
 from pacman import GameState
@@ -288,7 +289,24 @@ def betterEvaluationFunction(currentGameState: GameState) -> float:
   """
 
   # BEGIN_YOUR_CODE (our solution is 13 lines of code, but don't worry if you deviate from this)
-  raise Exception("Not implemented yet")
+  def getDistFromPacman(x, y):
+    pacmanPos = currentGameState.getPacmanPosition()
+    # TODO use smarter than euclidian dist
+    return abs(pacmanPos[0] - x) + abs(pacmanPos[1] - y)
+  def exponentiallyWeightedScore(objectives):
+    return sum(math.exp(-1 * getDistFromPacman(objectivePos[0], objectivePos[1])) for objectivePos in objectives)
+  def getFoodScore(foodGrid, pacmanPosition):
+    foodsPos = [(x, y) for y in range(foodGrid.height) for x in range(foodGrid.width) if foodGrid[x][y] == True]
+    return exponentiallyWeightedScore(foodsPos)
+  food = getFoodScore(currentGameState.getFood(), currentGameState.getPacmanPosition())
+  ghostStates = currentGameState.getGhostStates()
+  scary = int(sum(ghostState.scaredTimer for ghostState in ghostStates) > 0)
+  capsule = 100 if scary else 200 * exponentiallyWeightedScore(currentGameState.getCapsules())
+  scaredGhostsPos = [ghostState.getPosition() for ghostState in ghostStates if ghostState.scaredTimer > 0]
+  ghost = 200 * exponentiallyWeightedScore(scaredGhostsPos)
+  score = currentGameState.getScore()
+  # print(f"food={food}; score={score}")
+  return food + capsule + ghost + score
   # END_YOUR_CODE
 
 # Abbreviation
