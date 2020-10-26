@@ -468,8 +468,9 @@ class SchedulingCSPConstructor:
         # BEGIN_YOUR_CODE (our solution is 5 lines of code, but don't worry if you deviate from this)
         for request in self.profile.requests:
             for quarter in self.profile.quarters:
-                csp.add_unary_factor((request, quarter), \
-                    lambda cid: cid is None or quarter in request.quarters)
+                if len(request.quarters) > 0:
+                    csp.add_unary_factor((request, quarter), \
+                        lambda cid: cid is None or quarter in request.quarters)
         # END_YOUR_CODE
 
     def add_request_weights(self, csp: CSP) -> None:
@@ -556,18 +557,17 @@ class SchedulingCSPConstructor:
         #         Note: 7 in the call just helps create the domain, it does 
         #         not define a constraint.
         # BEGIN_YOUR_CODE (our solution is 17 lines of code, but don't worry if you deviate from this)
-        variables_by_quarter = collections.defaultdict(list)
-        for request in self.profile.requests:
-            for cid in request.cids:
-                cInfo = self.bulletin.courses[cid]
-                for quarter in self.profile.quarters:
+        for quarter in self.profile.quarters:
+            quarter_variables = []
+            for request in self.profile.requests:
+                for cid in request.cids:
+                    cInfo = self.bulletin.courses[cid]
                     cVar = (cid, quarter)
                     domain = [0] + list(range(cInfo.minUnits, cInfo.maxUnits+1))
                     csp.add_variable(cVar, domain)
                     csp.add_binary_factor(cVar, (request, quarter), lambda v1, v2: (v1 == 0) ^ (cid == v2))
-                    variables_by_quarter[quarter].append(cVar)
-        for quarter, variables in variables_by_quarter.items():
-            sum_var = create_sum_variable(csp, f"{quarter}_SUM", variables, self.profile.maxUnits)
+                    quarter_variables.append(cVar)
+            sum_var = create_sum_variable(csp, f"{quarter}_SUM", quarter_variables, self.profile.maxUnits)
             csp.add_unary_factor(sum_var, lambda total: total >= self.profile.minUnits)
         # END_YOUR_CODE
 
